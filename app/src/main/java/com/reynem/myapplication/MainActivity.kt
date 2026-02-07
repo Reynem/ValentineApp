@@ -90,7 +90,7 @@ enum class AnimationStage {
 
 @Composable
 fun WishesAnimationScreen(modifier: Modifier = Modifier) {
-    // Состояние текущего этапа анимации
+    // Current stage of animation
     var stage by remember { mutableStateOf(AnimationStage.Initial) }
 
     LaunchedEffect(Unit) {
