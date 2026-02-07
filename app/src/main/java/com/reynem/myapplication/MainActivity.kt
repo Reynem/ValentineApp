@@ -61,6 +61,10 @@ val wishingsList = listOf(
 )
 const val myWishesString = "Со святым валентином!"
 
+val emojiParticles = listOf(
+    "💘", "💗", "💝", "❤️", "💖"
+)
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -150,11 +154,16 @@ fun WishesAnimationScreen(modifier: Modifier = Modifier) {
             label = "HeartBeatScale"
         )
 
+        var explosionParticles by remember { mutableStateOf(listOf<EmojiParticle>()) }
+
         Box(
             modifier = Modifier.align(Alignment.Center),
             contentAlignment = Alignment.Center
         ) {
-            var buttonToggle by remember { mutableStateOf(false) }
+            EmojiExplosion(particles = explosionParticles) { idToRemove ->
+                explosionParticles = explosionParticles.filter { it.id != idToRemove }
+            }
+
             Icon(
                 imageVector = Icons.Filled.Favorite,
                 contentDescription = "Heart",
@@ -169,9 +178,17 @@ fun WishesAnimationScreen(modifier: Modifier = Modifier) {
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,
                         onClick = {
-                            buttonToggle = !buttonToggle
-                        },
-
+                            val newParticles = List(15) {
+                                EmojiParticle(
+                                    id = System.nanoTime() + it,
+                                    emoji = emojiParticles[Random.nextInt(0, emojiParticles.size)],
+                                    targetX = Random.nextInt(-250, 250).toFloat(),
+                                    targetY = Random.nextInt(-400, 100).toFloat(),
+                                    duration = Random.nextInt(800, 1500)
+                                )
+                            }
+                            explosionParticles = explosionParticles + newParticles
+                        }
                     )
             )
         }
