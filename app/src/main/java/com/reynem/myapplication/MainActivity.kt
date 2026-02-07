@@ -18,7 +18,9 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -65,13 +67,20 @@ val emojiParticles = listOf(
     "💘", "💗", "💝", "❤️", "💖"
 )
 
+val pinkColor = Triple(254, 192, 255)
+val pinkColorBorder = Triple(253, 229, 247)
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                Scaffold(modifier = Modifier
+                    .fillMaxSize(),
+                    containerColor = Color(0xFFFFE4E1)
+                )
+                { innerPadding ->
                     WishesAnimationScreen(
                         modifier = Modifier.padding(innerPadding)
                     )
@@ -93,21 +102,24 @@ fun WishesAnimationScreen(modifier: Modifier = Modifier) {
     // Current stage of animation
     var stage by remember { mutableStateOf(AnimationStage.Initial) }
 
+    val appearingPeriodMillis = 500L
+    val gatheringPeriodMillis = 5000L
+    val finishedPeriodMillis = 1500L
+
     LaunchedEffect(Unit) {
-        delay(500)
+        delay(appearingPeriodMillis)
         stage = AnimationStage.Appearing
 
-        delay(2000)
+        delay(gatheringPeriodMillis)
         stage = AnimationStage.Gathering
 
-        delay(1500)
+        delay(finishedPeriodMillis)
         stage = AnimationStage.Finished
     }
 
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFFE4E1))
     ) {
         val density = LocalDensity.current
         val maxWidthPx = with(density) { maxWidth.toPx() }.toInt()
@@ -132,7 +144,7 @@ fun WishesAnimationScreen(modifier: Modifier = Modifier) {
             },
             animationSpec = if (stage === AnimationStage.Gathering) {
                     tween(
-                        durationMillis = 2000,
+                        durationMillis = gatheringPeriodMillis.toInt(),
                         easing = FastOutLinearInEasing
                     )
                 } else spring(
@@ -256,7 +268,10 @@ fun WishingContainer(
         modifier = Modifier
             .offset { offset }
             .alpha(alpha)
-            .background(Color.White, RoundedCornerShape(8.dp))
+            .background(Color(pinkColor.first, pinkColor.second, pinkColor.third),
+                RoundedCornerShape(8.dp))
+            .border(BorderStroke(1.dp, Color(pinkColorBorder.first, pinkColorBorder.second, pinkColorBorder.third)),
+                shape = RoundedCornerShape(8.dp))
             .padding(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Text(
