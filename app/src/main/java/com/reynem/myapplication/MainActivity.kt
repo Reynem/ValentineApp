@@ -1,0 +1,240 @@
+package com.reynem.myapplication
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntOffsetAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import androidx.core.util.Pair
+import com.reynem.myapplication.ui.theme.MyApplicationTheme
+import kotlinx.coroutines.delay
+import kotlin.random.Random
+
+val wishingsList = listOf(
+    "Ты очень классная!", "Эпштейн гордится тобой!", "Ты очень милая!", "Дидди бы тебя смазал!",
+    "Дарю цветочки 🌼🌼🌼", "Вот еще цветы 🌸🌸🌸"
+)
+const val myWishesString = "С Днем Рождения!"
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            MyApplicationTheme {
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    WishesAnimationScreen(
+                        modifier = Modifier.padding(innerPadding)
+                    )
+                }
+            }
+        }
+    }
+}
+
+enum class AnimationStage {
+    Initial,
+    Appearing,
+    Gathering,
+    Finished
+}
+
+@Composable
+fun WishesAnimationScreen(modifier: Modifier = Modifier) {
+    // Состояние текущего этапа анимации
+    var stage by remember { mutableStateOf(AnimationStage.Initial) }
+
+    LaunchedEffect(Unit) {
+        delay(500)
+        stage = AnimationStage.Appearing
+
+        delay(2000)
+        stage = AnimationStage.Gathering
+
+        delay(1500)
+        stage = AnimationStage.Finished
+    }
+
+    BoxWithConstraints(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color(0xFFFFE4E1))
+    ) {
+        val density = LocalDensity.current
+        val maxWidthPx = with(density) { maxWidth.toPx() }.toInt()
+        val maxHeightPx = with(density) { maxHeight.toPx() }.toInt()
+        val centerX = maxWidthPx / 2
+        val centerY = maxHeightPx / 2
+
+        val randomPositions = remember {
+            wishingsList.map {
+                val randomX = Random.nextInt(10, maxWidthPx - 300)
+                val randomY = Random.nextInt(10, maxHeightPx - 300)
+                IntOffset(randomX, randomY)
+            }
+        }
+
+        val heartScale by animateFloatAsState(
+            targetValue = when (stage) {
+                AnimationStage.Initial -> 0f
+                AnimationStage.Appearing -> 0.4f
+                AnimationStage.Gathering -> 1.0f
+                else -> 1.5f
+            },
+            animationSpec = if (stage === AnimationStage.Gathering) {
+                    tween(
+                        durationMillis = 2000,
+                        easing = FastOutLinearInEasing
+                    )
+                } else spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    ),
+            label = "HeartScale"
+        )
+
+        var infiniteTransition = rememberInfiniteTransition("HeartBeat")
+
+        val heartBeatScale by infiniteTransition.animateFloat(
+            initialValue = 1.0f,
+            targetValue = 1.2f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(500, easing = FastOutSlowInEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "HeartBeatScale"
+        )
+
+        Box(
+            modifier = Modifier.align(Alignment.Center),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Favorite,
+                contentDescription = "Heart",
+                tint = Color.Red,
+                modifier = Modifier
+                    .size(150.dp)
+                    .scale(if (stage == AnimationStage.Finished) heartScale * heartBeatScale
+                           else heartScale
+                    )
+            )
+        }
+
+        wishingsList.forEachIndexed { index, text ->
+            val targetPosition = if (stage == AnimationStage.Gathering || stage == AnimationStage.Finished) {
+                val textCenterPos = Pair(centerX - 150, centerY - 40)
+                IntOffset(textCenterPos.first, textCenterPos.second)
+            } else {
+                randomPositions[index]
+            }
+
+            val animatedOffset by animateIntOffsetAsState(
+                targetValue = targetPosition,
+                animationSpec = tween(durationMillis = 1500),
+                label = "MoveToCenter"
+            )
+
+            val alpha by animateFloatAsState(
+                targetValue = if (stage == AnimationStage.Finished) 0f else 1f,
+                animationSpec = tween(300),
+                label = "Alpha"
+            )
+
+            if (stage != AnimationStage.Initial) {
+                WishingContainer(
+                    text = text,
+                    offset = animatedOffset,
+                    alpha = alpha
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier.align(Alignment.Center),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.offset(y = 120.dp)
+            ) {
+                AnimatedVisibility(
+                    visible = stage == AnimationStage.Finished,
+                    enter = fadeIn(animationSpec = tween(1000)) + slideInVertically()
+                ) {
+                    Text(
+                        text = myWishesString,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFD32F2F)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun WishingContainer(
+    text: String,
+    offset: IntOffset,
+    alpha: Float
+) {
+    Box(
+        modifier = Modifier
+            .offset { offset }
+            .alpha(alpha)
+            .background(Color.White, RoundedCornerShape(8.dp))
+            .padding(horizontal = 12.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            color = Color.Black
+        )
+    }
+}
