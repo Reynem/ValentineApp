@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -20,6 +19,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -58,7 +59,7 @@ val wishingsList = listOf(
     "Ты очень классная!", "Эпштейн гордится тобой!", "Ты очень милая!", "Дидди бы тебя смазал!",
     "Дарю цветочки 🌼🌼🌼", "Вот еще цветы 🌸🌸🌸"
 )
-const val myWishesString = "С Днем Рождения!"
+const val myWishesString = "Со святым валентином!"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -137,13 +138,13 @@ fun WishesAnimationScreen(modifier: Modifier = Modifier) {
             label = "HeartScale"
         )
 
-        var infiniteTransition = rememberInfiniteTransition("HeartBeat")
+        val infiniteTransition = rememberInfiniteTransition("HeartBeat")
 
         val heartBeatScale by infiniteTransition.animateFloat(
             initialValue = 1.0f,
-            targetValue = 1.2f,
+            targetValue = 1.1f,
             animationSpec = infiniteRepeatable(
-                animation = tween(500, easing = FastOutSlowInEasing),
+                animation = tween(300, easing = FastOutSlowInEasing),
                 repeatMode = RepeatMode.Reverse
             ),
             label = "HeartBeatScale"
@@ -153,6 +154,7 @@ fun WishesAnimationScreen(modifier: Modifier = Modifier) {
             modifier = Modifier.align(Alignment.Center),
             contentAlignment = Alignment.Center
         ) {
+            var buttonToggle by remember { mutableStateOf(false) }
             Icon(
                 imageVector = Icons.Filled.Favorite,
                 contentDescription = "Heart",
@@ -161,6 +163,15 @@ fun WishesAnimationScreen(modifier: Modifier = Modifier) {
                     .size(150.dp)
                     .scale(if (stage == AnimationStage.Finished) heartScale * heartBeatScale
                            else heartScale
+                    )
+                    .clickable(
+                        enabled = stage == AnimationStage.Finished,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {
+                            buttonToggle = !buttonToggle
+                        },
+
                     )
             )
         }
