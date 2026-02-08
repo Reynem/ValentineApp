@@ -18,6 +18,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -50,6 +51,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.core.util.Pair
@@ -61,7 +63,14 @@ val wishingsList = listOf(
     "Ты очень классная!", "Эпштейн гордится тобой!", "Ты очень милая!", "Дидди бы тебя смазал!",
     "Дарю цветочки 🌼🌼🌼", "Вот еще цветы 🌸🌸🌸"
 )
-const val myWishesString = "Со святым валентином!"
+
+val myFinalWishesList = listOf(
+    "Со святым валентином!", "Ты у меня просто лапочка 💐", "Желаю только всего наилучшего 🪷",
+    "Меня поздравить тоже не забудь 👉👈", "Пусть каждый день будет еще ярче!",
+    "Пусть мир дарит тебе только любовь 🥰", "Люблю целую 😘", "Gay kiss 💏",
+    "Я ослеп при виде тебя 😎"
+)
+
 
 val emojiParticles = listOf(
     "💘", "💗", "💝", "❤️", "💖"
@@ -106,6 +115,8 @@ fun WishesAnimationScreen(modifier: Modifier = Modifier) {
     val gatheringPeriodMillis = 5000L
     val finishedPeriodMillis = 1500L
 
+    var currentWishingString by remember { mutableStateOf(myFinalWishesList[Random.nextInt(0, wishingsList.size)]) }
+
     LaunchedEffect(Unit) {
         delay(appearingPeriodMillis)
         stage = AnimationStage.Appearing
@@ -115,6 +126,11 @@ fun WishesAnimationScreen(modifier: Modifier = Modifier) {
 
         delay(finishedPeriodMillis)
         stage = AnimationStage.Finished
+
+        while (true) {
+            delay(finishedPeriodMillis)
+            currentWishingString = myFinalWishesList[Random.nextInt(0, wishingsList.size)]
+        }
     }
 
     BoxWithConstraints(
@@ -235,7 +251,7 @@ fun WishesAnimationScreen(modifier: Modifier = Modifier) {
         }
 
         Box(
-            modifier = Modifier.align(Alignment.Center),
+            modifier = Modifier.align(Alignment.Center).padding(horizontal = 2.dp),
             contentAlignment = Alignment.Center
         ) {
             Column(
@@ -244,12 +260,14 @@ fun WishesAnimationScreen(modifier: Modifier = Modifier) {
             ) {
                 AnimatedVisibility(
                     visible = stage == AnimationStage.Finished,
-                    enter = fadeIn(animationSpec = tween(1000)) + slideInVertically()
+                    enter = fadeIn(animationSpec = tween(1000)) + slideInVertically(),
+                    exit = slideOutVertically()
                 ) {
                     Text(
-                        text = myWishesString,
+                        text = currentWishingString,
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
                         color = Color(0xFFD32F2F)
                     )
                 }
